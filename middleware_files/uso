@@ -1,0 +1,15 @@
+- Ice v3.3 is required
+
+
+USE
+---
+   
+   $ icebox --Ice.Config=config.icebox
+   //In a different terminal
+   // We create the "arlarms" topic.
+   $ icestormadmin --Ice.Config=config.icestorm -e "create alarms"
+   // We run the subscriber   
+   $ python subscriptor.py 
+   // We run the publisher
+   $ python presenceDummy.py
+

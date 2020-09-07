@@ -1,0 +1,121 @@
+<h1>A Semantic Model for Actions and Event in Ambient Intelligence</h1>
+<p>Based on our conviction that <em>event management</em> and <em>response generation</em> are two essential aspects of
+systems for Ambient Intelligence, we propose here a <strong>semantic model</strong>
+for actions and events as a way of handling these issues. Basically, our semantic model describes
+what actions and events are, how they are connected, and how
+computational systems should think
+about their meaning. </p>
+
+<p>This model entails an approach with which to both reason about and model context
+events and generate behavioral responses to those events, when necessary. The
+model supports this ad-hoc response generation by
+<strong>automatically composing</strong> services when those which are available do not meet the
+expected functionality (without requesting user
+intervention). </p>
+
+<p>The great potential of the proposed semantic model is founded on its
+fulfillment of the inter-module connectivity and
+communication requirements of a framework for Ambient
+Intelligence. In our endeavor to show the
+impact that automatic service composition has on the achievement of
+autonomous, self-managed, and pro-active systems, we propose an optional implementation that makes use of
+several technologies: ZeroC ICE, JADEX, and Scone. The only purpose of this optional implementation is showing the
+feasibility of our proposal and to show the reader how to map the proposed theorethical semantic model into
+a concrete system.  </p>
+<div style="text-align: center"><img src="figures/diagrama.png" width="851" height="440" alt="System Architecture Overview" /></div>
+
+
+<h2>The Semantic Model</h2>
+<p>Our main contribution is twofold with regard to the
+semantic model. First, we propose a non-coupled semantic
+model. Second, as mentioned in the paper,  we are convinced that
+the notion of event, action or service should not vary among systems, nor
+should they respond to the mere approach convenience. For that reason,
+we follow a novel approach proposing a semantic model for Ambient
+Intelligence based on the conclusions, concerning actions and events,
+drawn from the philosophical doctrine. In contrast to what can be
+found in the literature revision, our model is formally based and
+justified on philosophical studies. </p>
+
+<p>From a computing perspective, a <strong>semantic model</strong> is considered to
+be an agreement on how to interpret the knowledge represented in the
+knowledge base. Semantic models therefore ensure common
+interpretations of shared knowledge. They are also an essential requirement 
+when there are different instances handling the same knowledge. Every
+holder is expected to extract the same meaning or conclusions from the
+represented knowledge. </p>
+
+
+<p>Having said that, the following section provides a more formal expression 
+of the proposed semantic model, along with the justification of why the proposed 
+semantic model is considered to be common-sense compliant.</p>
+
+<div style="text-align: center"> <img src="figures/ontology.png" width="30%" height="50%" alt="Semantic Model for Actions and Events" /></div>
+
+<h2>Implementation Guidelines</h2>
+<p>The following subsections analyze those modules, paying particular
+attention to the implications of the semantic model and the different
+strategies followed for its implementation.</p>
+
+
+<p>Furthermore, the following sequence diagrams, provide an overview of the interaction among the different modules. </p>
+<div style="text-align: center"><img src="figures/sequenceDiagram.png" width="1198" height="1818" alt="" /></div>
+
+
+<h3>The Multi-Agent System</h3>
+<p>The Multi-Agent System (MAS) works as a link between the
+Ambient Intelligence environment and the other elements of which the
+Ambient Intelligence framework is composed. The MAS is basically in
+charge of adopting the plan as outlined by the planning algorithm,
+and undertaking it. The interaction with the other architectural
+elements is, once again, supported in the semantic model. At the
+MAS level, the semantic model is implemented by means of
+an OWL ontology. The Agent Communication Language (ACL)
+messages, exchanged among agents, therefore contain classes of the
+ontology, which are simultaneously concepts of the semantic model.</p>
+
+<p>We have used <a href="http://jadex-agents.informatik.uni-hamburg.de/xwiki/bin/view/About/Overview" name="Jadex" title="Jadex">Jadex</a>, a BDI Agent System that 
+allows to develop goal oriented agents following the BDI model.
+</p>
+<h4>Manager Agent</h4>
+<a href="JADEX_files/Manager/Manager.agent.xml" name="Manager Agent" title="XML description of the Manager Agent">Manager.agent.xml</a> XML description of the Manager Agent<br />
+<a href="JADEX_files/Manager/WaitingForEventsIce.java" name="">WaitingForEventsIce.java</a> Java class that describes the "waiting for Ice events" plan.<br />
+<a href="JADEX_files/Manager/StarterPlan.java" name="">StarterPlan.java</a> Java class that describes the plan that starts up other agents.<br />
+<a href="JADEX_files/Manager/SendEventTypePlan.java">SendEventTypePlan.java</a> Java class that describes the plan that sends the Perceptor Agent detected event.<br />
+<a href="JADEX_files/Manager/EventsMonitorI.java">EventsMonitorI.java</a> Java class that manages the events reported to the "alarms" channel.
+<h4>Perceptor Agent</h4>
+<a href="JADEX_files/Perceptor/Perceptor.agent.xml">Perceptor.agent.xml</a> XML description of the Perceptor Agent<br />
+<a href="JADEX_files/Perceptor/ManageEventPlan.java">ManageEventPlan.java</a> Java class that manages the receptions of messages from the Manager Agent (containing the event type).<br />
+<a href="JADEX_files/Perceptor/GetBiometricIDPlan.java">GetBiometricIDPlan.java</a> Java class that describes the guidelines for accomplishing a biometric identification. These guidelines are provided to the planner.<br />
+<a href="JADEX_files/Perceptor/Planning.java">Planning.java</a> Implementation of the planning algorithm. This class receives request for each of the individual plans of the agent.<br />
+
+
+
+<h3>The middleware framework</h3>
+<a href="middleware_files/SLICE/SemanticModel.ice">SemanticModel.ice</a> Semantic Model implemented in Slice. <br />
+<a href="middleware_files/config.icebox">config.icebox</a> The Icebox configuration file.<br />
+<a href="middleware_files/config.icestorm">config.icestorm</a> The Icestorm configuration file.<br />
+<a href="middleware_files/USE">USE</a> Some notes about how to run the example<br />
+
+
+<h3>Scone Knowledge</h3>
+The <a href="http://www.cs.cmu.edu/~sef/scone/">Scone Knowledge Base project</a> is used here so as to enhace our proposal with
+common-sense capabilities. An extensive justification of how common-sense reasoning can be accomplished by means of Scone can be found <a href="keyIssuesOfCommonSense.html">here</a>.<br />
+
+<h4>General Definitions</h4>
+<a href="Scone_files/building.lisp">building.lisp</a> This file describes the general features of a building in Scone.<br />
+<a href="Scone_files/building-definitions.lisp">building-definitions.lisp</a> Additional information about the building description.<br />
+<a href="Scone_files/devices.lisp">devices.lisp</a> This file models the device concept of the semantic model along with some instances.<br />
+<a href="Scone_files/service-definitions.lisp">service-definitions.lisp</a>  This file models the service concept of the semantic model.<br />
+<a href="Scone_files/services.lisp">services.lisp</a> Here, instances of the service concept are declared.<br />
+
+<h4>Action definitions</h4>
+<a href="Scone_files/Actions/actions.lisp">actions.lisp</a> <br />
+<a href="Scone_files/Actions/actions.lisp">actions2.lisp</a> <br />
+<a href="Scone_files/Actions/actions.lisp">actions3.lisp</a> <br />
+<h4>Location aspects</h4>
+<a href="Scone_files/MLP/Shape.lisp">Shape.lisp</a> This file describes the shape and data types considered in the MLP.<br />  
+<a href="Scone_files/MLP/Location.lisp">Location.lisp</a> Based on the OpenSL standard, we have described those issues referred to location aspects.<br />
+<a href="Scone_files/MLP/LocationType.lisp">LocationType.lisp</a> Definition of additional data types.<br />
+<a href="Scone_files/MLP/actions4.lisp">actions4.lisp</a> Actions involving location aspects.<br />
+

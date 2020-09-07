@@ -1,0 +1,55 @@
+//-*- mode:idl -*-
+module SemanticModel {
+
+  struct Property {
+	string propertyName;
+	Object propertyValue;
+  };
+  struct Event {
+	       string type;
+	};
+  sequence<Property> specifications;
+  
+  // interface Event{
+  //   void eventName(string name);
+  //   void setSpecification(specifications spec);		
+  //   specifications getSpecification();   	    
+
+  // };
+  module Events
+  {
+     interface EventMonitor {
+     	void report (Event e);  
+    };
+  };
+
+  interface Device{
+    void deviceName(string name);
+    void setSpecification(specifications spec);		
+    specifications getSpecification();   	    
+  };
+
+  sequence<Device> providers;
+  sequence<Object> things;
+  sequence<Event>  results;	    
+
+  interface Action{
+   void setTargetOfAction(Object thg);
+   things getTargetOfActions();	 
+   results getResultOfAction();
+   void setResultOfAction(Event evt);
+  };    
+  
+
+
+  sequence<Action> actions;
+
+  interface Service {
+   results performAction(Action act, Object thg);
+   providers agentOf(Action act);
+   void setAction(Action act);
+   actions getAction();
+   void setDevice(Device dev);
+   providers getDevice();
+   };
+};

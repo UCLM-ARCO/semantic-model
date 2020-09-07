@@ -1,0 +1,5 @@
+IceStorm.InstanceName=Events
+IceStorm.TopicManager.Endpoints=tcp -p 10000
+IceStorm.Publish.Endpoints=tcp
+Freeze.DbEnv.IceStorm.DbHome=db
+IceStormAdmin.TopicManager.Default=Events/TopicManager:default -p 10000

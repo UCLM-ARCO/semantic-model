@@ -1,0 +1,2 @@
+IceBox.ServiceManager.Endpoints=tcp -p 9999
+IceBox.Service.IceStorm=IceStormService,33:createIceStorm --Ice.Config=config.icestorm

@@ -1,0 +1,309 @@
+<!-- 
+     <H3>The Perceptor agent.</H3>
+     
+     The Perceptor Agent perceives the events taking place in the
+     environment whenever an alarm event has arisen. 
+
+                         *******************
+                         ** first version **
+                         *******************
+     This first version of the agent implementation just considers the
+     unauthorised presence alarm. Beliefs, goals and plans are
+     constraint to this soley event. Further implementation will
+     consider different events.
+-->
+<agent xmlns="http://jadex.sourceforge.net/jadex"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://jadex.sourceforge.net/jadex
+	                   http://jadex.sourceforge.net/jadex-0.96.xsd"
+       name="Perceptor"
+       package="jadex.examples.MASCS.Perceptor">
+  <imports>
+    <import>jadex.examples.MASCS.*</import>
+    <import>jadex.*</import>
+    <import>jadex.runtime.*</import>
+    <import>jadex.runtime.impl.*</import>
+    <import>jadex.planlib.*</import>
+    <import>java.util.*</import>
+    <import>jadex.planlib.*</import>
+    <import>jadex.adapter.fipa.*</import>   
+  </imports>
+  <capabilities>
+    <capability name="procap" file="jadex.planlib.Protocols"/>
+    <capability name="dfcap" file="jadex.planlib.DF"/>
+    <capability name="amscap" file="jadex.planlib.AMS"/>
+  </capabilities>
+ 
+  
+  <!--
+    *********************************
+    ****** List of beliefs ********** 
+    ********************************* 
+    -->
+  
+  <beliefs>
+    <!-- List of events taking place. This is the same list held by the Manager Agent --> 
+    <beliefset name="eventTypes" class="Event"></beliefset>
+
+    <!-- The intruder whenever an unauthorised event arises -->
+    <beliefset name="intruders" class="Intruder"></beliefset>
+
+    <!-- Barriers that might stop the intruder -->
+    <beliefset name="barriers" class="Barrier"></beliefset>
+
+    <!-- Vulnerable objectives that lead the intrusion -->
+    <beliefset name="objectives" class="Objective"></beliefset>
+        
+    <!-- Damages caused during the intrusion -->
+    <beliefset name="damages" class="Damage"></beliefset>
+
+    <beliefset name="startedagents" class="AgentIdentifier"/>
+    <beliefref name="rp_filter" class="IFilter">
+      <concrete ref="procap.rp_filter"/>
+    </beliefref>
+
+  </beliefs>
+  
+
+
+  <!--
+      *********************************
+      ******** List of goals ********** 
+      ********************************* 
+    -->
+  <goals>
+     <!-- Used to register at the DF -->
+    <achievegoalref name="df_register">
+      <concrete ref="dfcap.df_register"/>
+    </achievegoalref>
+
+    <!-- Used to search for the other agents -->
+    <achievegoalref name="df_search">
+      <concrete ref="dfcap.df_search"/>
+    </achievegoalref>
+
+    <!-- O1. Find out the intrusion intention -->
+    <achievegoal name="discover_intentions">
+      <creationcondition>$beliefbase.event.isTYPEUNAUTHORISEDPRESENCE()</creationcondition>
+      <contextcondition>$beliefbase.intruders.isSTATEONRUNNING()</contextcondition>
+      <targetcondition>$beliefbase.intruders.getIntruderHasAimObjective()!=null</targetcondition>
+    </achievegoal>
+
+    <!-- O2. Intruder identification -->
+    <achievegoal name="intruder_identification">
+      <!--<parameter name="$event" class="Events.Event">
+	<bindingoptions>$beliefbase.eventType</bindingoptions>
+      </parameter>
+      <unique/> -->
+      <parameter name="unauthorisedPresence" class="Event">
+	<bindingoptions>$beliefbase.eventTypes</bindingoptions>
+      </parameter>
+      <unique/>
+      <!-- Create a new goal when new waste is seen and
+	   the agent isnt already cleaning. -->
+      <creationcondition>
+	true
+      </creationcondition>
+      
+      <!--<contextcondition>$beliefbase.intruders.getIdentification.equals(null)</contextcondition>
+      <targetcondition>$beliefbase.intruders.getIdentification()!=null</targetcondition>-->
+    </achievegoal>
+
+    <!-- O3. Damages caused during intrusion -->
+    <maintaingoal name="caused_damages" recur="true"
+		  recurdelay="2000">
+      <creationcondition>$beliefbase.event.isTYPEUNAUTHORISEDPRESENCE()</creationcondition>
+      <maintaincondition>$beliefbase.intruders.isSTATEONRUNNING()</maintaincondition>
+    </maintaingoal>
+    
+    <!-- O4. Stop the intruder -->
+    <performgoal name="stop_intruder" retry="true" exclude="never">
+      <creationcondition>$beliefbase.event.isTYPEUNAUTHORISEDPRESENCE()</creationcondition>
+      <contextcondition>$beliefbase.intruders.isSTATEONRUNNING()</contextcondition>
+    </performgoal>
+    
+    <!-- O5. Mantain the safety of the environment -->
+    <performgoal name="keep_safe" retry="true" exclude="when_failed">
+      <parameter name="intruder" class="Intruder">
+	<bindingoptions>$beliefbase.intruders</bindingoptions>
+      </parameter>
+      <unique/>
+      <!-- Create a new goal when new intruder is seen and
+	   the agent isnt already keeping environment safe. -->
+      <creationcondition>$beliefbase.event.isTYPEUNAUTHORISEDPRESENCE()</creationcondition>
+      <!-- Suspend the goal when the intruder has been caught. -->
+      <contextcondition>$beliefbase.intruders.isSTATEONRUNNING()</contextcondition>
+      <!-- The goal will be dropped when the intruder has vanished. -->
+      <dropcondition>$beliefbase.intruder==null</dropcondition>   
+    </performgoal>
+    <achievegoalref name="df_deregister">
+      <concrete ref="dfcap.df_deregister"/>
+    </achievegoalref>
+
+  </goals>
+  
+
+ <!--
+      *********************************
+      ******** List of plans ********** 
+      ********************************* 
+    -->
+  <plans>
+    <!-- Plan to get the route followed by the intruder -->
+    <plan name="get_route">
+      <body class="GetRoutePlan"/>
+      <trigger>
+	<goal ref="discover_intentions"/>
+	<goal ref="stop_intruder"/>
+      </trigger>
+    </plan>
+
+    <!-- Plan intended to obtain likely vulnerabilities -->
+    <plan name="get_vulnerability">
+      <body class="GetVulnerabilityPlan"/>
+      <trigger>
+	<goal ref="discover_intentions"/>
+      </trigger>
+    </plan>
+
+   <!-- Plan intended to accomplish a biometric ID of the intruders -->
+    <plan name="get_biometric_ID">
+      <body class="GetBiometricIDPlan"/>
+      <trigger>
+	<goal ref="intruder_identification"/>
+      </trigger>
+    </plan>
+
+    <!-- Plan intended to identify the intruder based on some
+    electronic ID device carried out by the intruder, such as an RFID
+    tag, bluetooth device, etc... -->
+    <plan name="get_electronic_ID">
+      <body class="GetElectronicIDPlan"/>
+      <trigger>
+	<goal ref="intruder_identification"/>
+      </trigger>
+    </plan>
+
+   <!-- Plan intended to sucess in the intruder face recognition -->
+    <plan name="face_recognition">
+      <body class="FaceRecognitionPlan"/>
+      <trigger>
+	<goal ref="intruder_identification"/>
+      </trigger>
+    </plan>
+
+    <!-- Plan intended to sucess in the intruder face recognition -->
+    <plan name="intruder_classification">
+      <body class="IntruderClassificationPlan"/>
+      <trigger>
+	<goal ref="intruder_identification"/>
+      </trigger>
+    </plan>
+
+    <!-- Plan intended to gathered the damages -->
+    <plan name="get_damage">
+      <body class="GetDamagePlan"/>
+      <trigger>
+	<goal ref="caused_damages"/>
+      </trigger>
+    </plan>
+
+    <!-- Plan intended to classify the importance of the damages -->
+    <plan name="classify_damage">
+      <body class="ClassifyDamagePlan"/>
+      <trigger>
+	<goal ref="caused_damages"/>
+      </trigger>
+    </plan>
+
+    <!-- Plan intended to obtain a list of environmental barriers -->
+    <plan name="get_barrier">
+      <body class="GetBarrierPlan"/>
+      <trigger>
+	<goal ref="stop_intruder"/>
+      </trigger>
+    </plan>
+    
+    <!-- Plan that manage the reception of an event -->
+    <plan name="manage_event">
+      <body class="ManageEventPlan"/>
+      <trigger>
+	<messageevent ref="eventType_inform"/>
+      </trigger>
+    </plan>
+
+    <!-- There are some plans that need to be implemented in the
+    future, such as those for the objective 5, and P2.3, P2.4, P3.3,
+    P4.2 -->
+
+  </plans>
+
+
+  <!--
+    *********************************
+    ****** List of events  ********** 
+    ********************************* 
+    -->
+  <events>
+    <!-- Message informing about the type of event that the perceptor
+    is to be dealing with. -->
+    <messageevent name="eventType_inform"  direction="receive" type="fipa">
+      <parameter name="performative" class="String" direction="fixed">
+	<value>SFipa.INFORM</value>
+      </parameter>
+      <parameter name="language" class="String" direction="fixed">
+	<value>SFipa.JAVA_XML</value>
+      </parameter>
+      <parameter name="ontology" class="String" direction="fixed">
+	<value>UnauthorisedPresenceOntologyOntology.ONTOLOGY_NAME</value>
+      </parameter>
+      <parameter name="content-class" class="Class" direction="fixed">
+	<value>Event.class</value>
+      </parameter>     
+      <parameter name="content" class="Event"/> 
+    </messageevent>
+  </events>
+  
+
+  <!--
+    *********************************
+    ********  Properties  ***********
+    ********************************* 
+    -->
+
+  <properties>
+    <property name="fipa.servicedescription.percept">
+      SFipa.createServiceDescription("service_percept", "service_percept", "Hesperia")
+    </property>
+    <property name="fipa.agentdescription.perceptor">
+      SFipa.createAgentDescription(new AgentIdentifier("Perceptor"), 
+      (ServiceDescription)$propertybase.getProperty("fipa.servicedescription.percept"))
+    </property>
+  </properties>
+
+  
+  
+  <!--
+    *********************************
+    ****** Configurations  ********** 
+    ********************************* 
+    -->
+  
+  <configurations>
+    <configuration name="default">
+      <beliefs>
+	<initialbelief ref="rp_filter">
+	  <fact>IFilter.ALWAYS</fact>
+	</initialbelief>
+      </beliefs>
+      <goals>
+	<initialgoal ref="df_register">
+	  <parameter ref="description">
+ 	    <value>$agent.getPropertybase().getProperty("fipa.agentdescription.perceptor")</value>
+ 	  </parameter>
+	</initialgoal>
+	<endgoal ref="df_deregister"/>
+      </goals>
+    </configuration>
+  </configurations>
+</agent>
